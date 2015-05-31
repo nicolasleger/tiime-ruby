@@ -166,4 +166,10 @@ def run!(email, password)
   end
 end
 
-run!(ARGV[0], ARGV[1]) if __FILE__ == $0
+if __FILE__ == $0
+  if ARGV.length < 2
+    puts "Usage: ruby tiime_export.rb EMAIL PASSWORD"
+  else
+    run!(ARGV[0], ARGV[1])
+  end
+end
