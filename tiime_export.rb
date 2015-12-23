@@ -15,15 +15,23 @@ def balance(agent)
   balance = balance_element.text[/\d[\d ,€]+/]
 end
 
-def login(email, password, agent)
-  page = agent.get(TIIME_HOST)
+def login(email, password, agent, new_version = false)
+  url = new_version ? 'https://new.tiime.fr' : TIIME_HOST
+  page = agent.get(url)
 
-  form = page.forms.first
-  form['usr'] = email
-  form['pwd'] = password
+  login_form = page.forms.first
+  login_form.usr = email
+  login_form.pwd = password
 
-  page = form.submit
-  !page.title.include?('Connectez-vous')
+  page = login_form.submit
+
+  # Redirection to new login form
+  new_login_form = page.forms.first
+  if !new_version && !new_login_form.nil? && new_login_form.action.include?('new.tiime.fr')
+    return login(email, password, agent, true)
+  end
+  
+  page.uri.to_s.include?('banques')
 end
 
 def get_document_ids(agent)
