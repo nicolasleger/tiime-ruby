@@ -47,10 +47,10 @@ def get_document_ids(agent)
     subfolders_tree_dom.css('li').map { |subfolder|
       subfolder.attr('data-hdl')
     }
-  }.reverse.flatten # Recent to old
+  } # Recent to old
 
   # 3. Browse folders
-  document_ids = folder_ids.map do |folder_id|
+  document_ids = folder_ids.flat_map do |folder_id|
     page = agent.post("#{TIIME_HOST}/documents.requests.php", {
       queryname: 'chargeviewer',
       handle: folder_id,
@@ -62,7 +62,7 @@ def get_document_ids(agent)
     documents_tree_dom.css('tbody tr').map { |subfolder|
       subfolder.attr('data-hdl')
     }
-  end.flatten.compact
+  end.compact
 
   document_ids
 end
