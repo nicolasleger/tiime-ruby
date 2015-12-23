@@ -40,7 +40,7 @@ def get_document_ids(agent)
   folder = JSON.parse(page.body)
 
   # 2. Browse year subfolders
-  folder_ids = (2012..2015).map { |year|
+  folder_ids = (2008..Date.today.year).to_a.reverse.flat_map { |year|
     subfolders_tree = folder['folder'][year.to_s]['ArborescenceDocument']
 
     subfolders_tree_dom = Nokogiri::HTML(subfolders_tree)
