@@ -37,12 +37,11 @@ end
 def get_document_ids(agent)
   # 1. Browse master folder
   page = agent.post("#{TIIME_HOST}/documents.requests.php", { queryname: 'chargeexplorer' })
-  folder = JSON.parse(page.body)
+  folder = JSON.parse(page.body).fetch('folder')
 
   # 2. Browse year subfolders
   folder_ids = (2008..Date.today.year).to_a.reverse.flat_map { |year|
-    subfolders_tree = folder['folder'][year.to_s]['ArborescenceDocument']
-
+    subfolders_tree = folder[year.to_s]&.fetch('ArborescenceDocument')
     subfolders_tree_dom = Nokogiri::HTML(subfolders_tree)
     subfolders_tree_dom.css('li').map { |subfolder|
       subfolder.attr('data-hdl')
@@ -143,7 +142,7 @@ def download_documents(agent)
 
   document_ids = get_document_ids(agent)
   puts "Download documents"
-  document_ids.each do |document_id|
+  document_ids.map do |document_id|
     # 1. Need to load document before
     agent.post("#{TIIME_HOST}/documents.requests.php", {
       queryname: 'voirdocument',
@@ -155,13 +154,16 @@ def download_documents(agent)
     filename = "#{document_id}.pdf"
     filepath = File.join(EXPORTS_DIRECTORY_NAME, filename)
     puts "Download #{filename} to #{filepath}"
-    open(filepath, 'wb') { |file|
+    
+    begin
       # No need to be logged, each file is publicly available! (but after being charged just before)
-      file << open("#{TIIME_HOST}/view/#{filename}").read
-    }
-  end
-
-  true
+      body = open("#{TIIME_HOST}/view/#{filename}").read
+      open(filepath, 'wb') { |file|
+        file << body
+      }
+    rescue OpenURI::HTTPError
+    end
+  end.compact
 end
 
 def run!(email, password)
